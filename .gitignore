@@ -1,0 +1,6 @@
+secret.py
+.env
+venv/
+.ssh/
+*.swp
+*~
