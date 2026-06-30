@@ -26,4 +26,15 @@ class UserPublic(UserBase):
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     disabled: bool = Field(default=True)
-    password: str       
+    password: str
+
+class Product(SQLModel, table=True):
+    product_id: int | None = Field(default=None, primary_key=True)
+    id: int
+    name: str
+    description: str = Field(min_length=30)
+    price: int = Field(gt=0)
+    stock: int = Field(default=0, ge=0)
+    category_id: int
+    disabled: bool = Field(default=True)
+    password: str
