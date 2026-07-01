@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlalchemy import Column, JSON
 from pydantic import EmailStr
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 class UserBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -50,7 +50,13 @@ class Order(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id")
     total_price: int = Field(gt=0)
     status: Enum("pending", "paid", "delivered", "receipt", "canceled")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=datetime.now(timezone.utc))
     payment_id: str | None = None
 
+class OrderItem(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    order_id: int = Field(foreign_key="order.id")
+    product_id: int = Field(foreign_key="product.id")
+    quantity: int = Field(gt=0)
+    price_at_purchase: int = Field(gt=0)
