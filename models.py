@@ -3,6 +3,8 @@ from pydantic import Field
 from typing import List, Optional
 from sqlalchemy import Column, JSON
 from pydantic import EmailStr
+from enum import Enum
+from datetime import datetime
 
 class UserBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -43,4 +45,12 @@ class Category(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
 
+class Order(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    total_price: int = Field(gt=0)
+    status: Enum("pending", "paid", "delivered", "receipt", "canceled")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    payment_id: str | None = None
 
