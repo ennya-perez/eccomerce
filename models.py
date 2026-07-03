@@ -49,7 +49,7 @@ class Order(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     total_price: int = Field(gt=0)
-    status: Enum("pending", "paid", "delivered", "receipt", "canceled")
+    status: Enum("pending", "paid", "sent", "delivered", "canceled")
     created_at: datetime = Field(default_factory=datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=datetime.now(timezone.utc))
     payment_id: str | None = None
