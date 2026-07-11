@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-
+settings = Settings()
 
 API_DESCRIPTION = """
 Welcome to the backend of my project. This API handles the product catalogue, 

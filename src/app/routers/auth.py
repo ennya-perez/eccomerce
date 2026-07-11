@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 from app.models.user import AppUser
-from app.core.security import authenticate_user, create_access_token
-from app.core.config import Settings
+from app.core.security import authenticate_user, create_access_token, password_hasher
+from app.core.config import settings
 from app.schemas.token_schema import Token
 from app.services.email_services import EmailType
-from sqlmodel import Session
+from sqlmodel import Session, select
 from typing import Annotated
 from fastapi import Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,12 +14,16 @@ from app.schemas.user_schema import UserCreate, UserPublic
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
+
+
+
 @router.post("/token/login")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-session: Annotated[Session, Depends(get_session)]) -> Token:
+session: SessionDep) -> Token:
     user = authenticate_user(session, form_data.username, form_data.password)
-    if user == False:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -31,7 +35,7 @@ session: Annotated[Session, Depends(get_session)]) -> Token:
     session.add(db_users)
     session.commit()
     session.refresh(db_users)
-    access_token_expires = timedelta(minutes=Settings().ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
@@ -51,7 +55,7 @@ async def sign_up(session: SessionDep, user: UserCreate, background_tasks: Backg
     existing_user = session.exec(statement).first()
     if existing_user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="El nombre de usuario o el correo electrónico ya están registrados."
         )
     hashed_password = password_hasher.hash(user.password)

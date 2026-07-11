@@ -1,7 +1,8 @@
 from app.models.user import AppUser
 from app.schemas.token_schema import TokenData
 from app.core.db import SessionDep
-from sqlmodel import Session
+from app.core.config import settings
+from sqlmodel import Session, select
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 import jwt
@@ -11,9 +12,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from sqlalchemy import func
 
+
 ALGORITHM = "HS256"
 password_hasher = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token/login")
 
 def verify_password(plain_password, hashed_password):
     return password_hasher.verify(plain_password, hashed_password)
@@ -23,11 +25,10 @@ def get_password_hash(password):
     return password_hasher.hash(password)
 
 def get_user(db: SessionDep, username: str):
-    statement = select(AppUser).where(
-        func.lower(func.trim(AppUser.username)) == func.lower(func.trim(username))
-    )
+    clean_username = username.strip().lower()
+    statement = select(AppUser).where(AppUser.username == clean_username)
     user = db.exec(statement).first()
-    if not isinstance(user, AppUser):
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
@@ -48,7 +49,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -60,7 +61,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
             print("El username es None")

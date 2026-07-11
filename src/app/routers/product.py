@@ -5,14 +5,14 @@ from app.core.db import SessionDep
 from app.core.security import get_current_active_user
 from app.services.email_services import EmailType
 from sqlmodel import select
+from sqlalchemy import func
 from typing import Annotated
 from fastapi import Depends, HTTPException, Query
 from app.models.user import AppUser
 from app.models.product import Product
-from app.schemas.product_schema import ProductCreate, ProductPaginationResponse
+from app.schemas.product_schema import ProductCreate, ProductPaginationResponse, UpdateProduct
 from app.core.security import get_current_active_user
 from app.services.email_services import EmailType
-from sqlmodel import select
 from typing import Annotated
 from fastapi import Depends, HTTPException, Query
 
@@ -75,16 +75,42 @@ async def get_products(
         "results": products
     }
 
+@router.patch("/update")
+def update_product(id_product: int, update_product:
+    UpdateProduct, session: SessionDep, current_user: Annotated[AppUser, Depends(get_current_active_user)], 
+    background_tasks: BackgroundTasks):
+    db_product = session.get(Product, id_product)
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if db_product.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You are not the owner of this product")
+    data_product = update_product.model_dump(exclude_unset=True, exclude_none=True)
+    db_product.sqlmodel_update(data_product)
+    session.add(db_product)
+    session.commit()
+    session.refresh(db_product)
+    background_tasks.add_task(
+        EmailType.PRODUCT_UPDATED.send,
+        to_email=current_user.email,
+        name=current_user.username
+    )
+    return db_product
+
 
 @router.delete("/delete-product")
 def delete_product(id_product: int, CurrentUserDep: 
-    Annotated[SessionDep, Depends(get_current_active_user)], session: SessionDep):
+    Annotated[SessionDep, Depends(get_current_active_user)], session: SessionDep, background_tasks: BackgroundTasks):
     product = session.get(Product, id_product)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found. This product is not in the database")
     if product.owner_id == CurrentUserDep.id:
         session.delete(product)
         session.commit()
+        background_tasks.add_task(
+            EmailType.PRODUCT_DELETED.send, 
+            to_email=CurrentUserDep.email, 
+            name=CurrentUserDep.username
+        )
         return {"Message": "Your product has been deleted"}
     else:
         raise HTTPException(status_code=403, detail="You are not the owner of this product")
