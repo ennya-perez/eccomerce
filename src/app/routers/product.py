@@ -75,10 +75,32 @@ async def get_products(
         "results": products
     }
 
+@router.get("/{id_product}")
+def get_product(id_product: int, session: SessionDep):
+    """
+    ## Get a product by id
+    - **id_product:** int
+    - **session:** SessionDep
+    """
+    product = session.get(Product, id_product)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
 @router.patch("/update")
 def update_product(id_product: int, update_product:
     UpdateProduct, session: SessionDep, current_user: Annotated[AppUser, Depends(get_current_active_user)], 
     background_tasks: BackgroundTasks):
+    """
+    ## Update a product's data
+    
+    - **id_product:** int
+    - **update_product:** UpdateProduct (you can choose wich attribute to update) 
+    - **session:** SessionDep
+    - **current_user:** Annotated[AppUser, Depends(get_current_active_user)]
+    - **background_tasks:** BackgroundTasks
+    
+    """
     db_product = session.get(Product, id_product)
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -99,7 +121,12 @@ def update_product(id_product: int, update_product:
 
 @router.delete("/delete-product")
 def delete_product(id_product: int, CurrentUserDep: 
-    Annotated[SessionDep, Depends(get_current_active_user)], session: SessionDep, background_tasks: BackgroundTasks):
+    Annotated[SessionDep, Depends(get_current_active_user)], session: SessionDep,
+     background_tasks: BackgroundTasks):
+    """
+    ## Deletes a product from the database
+    **id_product:** int
+    """
     product = session.get(Product, id_product)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found. This product is not in the database")

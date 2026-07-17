@@ -1,5 +1,8 @@
 from app.core.config import Settings
 from sqlmodel import create_engine, Session, SQLModel
+from app.models.user import AppUser
+from app.models.product import Product
+from app.models.cart import CartItem
 from typing import Annotated
 from fastapi import Depends
 

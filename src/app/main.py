@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from app.core.db import create_db_and_tables, get_session
 from app.core.security import get_current_user
 from app.core.config import API_DESCRIPTION
-from app.routers import auth, orders, product
+from app.routers import auth, orders, product, cart
 from sqlmodel import Session
 
 app = FastAPI(
@@ -33,6 +33,7 @@ async def custom_swagger_ui_html():
 
 app.include_router(auth.router)
 app.include_router(product.router)
+app.include_router(cart.router)
 
 
 if __name__ == "__main__":

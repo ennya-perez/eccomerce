@@ -36,6 +36,10 @@ tags_metadata = [
         "description": "Shopcart's gestion, order history and payment process.",
     },
     {
+        "name": "Cart",
+        "description": "Cart management and checkout process.",
+    },
+    {
         "name": "Webhooks",
         "description": "Endpoints for receiving and processing Stripe webhooks.",
     }
