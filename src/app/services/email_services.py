@@ -11,6 +11,7 @@ class EmailType(Enum):
     ADD_PRODUCT = "add_product"
     PRODUCT_UPDATED = "update_product"
     PRODUCT_DELETED = "delete_product"
+    PAYMENT_SUCCESFUL = "payment_succesful" 
 
     def send(self, to_email: EmailStr, name: str):
         """
@@ -47,6 +48,12 @@ class EmailType(Enum):
             html = f"""
             <h3>Hello {name}</h3>
             <p>Your product has been succesfully deleted</p>
+            """
+        elif self == EmailType.PAYMENT_SUCCESFUL:
+            subject = "Payment successful"
+            html = f"""
+            <h3>Hello {name}</h3>
+            <p>Your payment has been succesfully completed</p>
             """
         else:
             raise ValueError("Tipo de email no soportado")

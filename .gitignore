@@ -4,3 +4,4 @@ venv/
 .ssh/
 *.swp
 *~
+reset_db.py

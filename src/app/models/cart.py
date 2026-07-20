@@ -1,7 +1,5 @@
 from sqlmodel import SQLModel, Field
 from typing import Optional
-from app.models.user import AppUser
-from app.models.product import Product
 
 class CartItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

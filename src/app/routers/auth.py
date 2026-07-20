@@ -51,25 +51,34 @@ async def sign_up(session: SessionDep, user: UserCreate, background_tasks: Backg
     - bio: Optional[str]
     """
     
-    statement = select(AppUser).where((AppUser.email == user.email) | (AppUser.username == user.username))
+    statement = select(AppUser).where((AppUser.email == user.email.lower().strip()) 
+    | (AppUser.username == user.username.lower().strip()))
     existing_user = session.exec(statement).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="El nombre de usuario o el correo electrónico ya están registrados."
+            detail="The user name or email is already registered."
         )
     hashed_password = password_hasher.hash(user.password)
-    db_user = AppUser(
-        username=user.username,
-        email=user.email,
-        password=hashed_password,
-        bio=user.bio,
-        disabled=False
+    db_user = AppUser.model_validate(
+        user, 
+        update={
+            "email": user.email.lower().strip(),
+            "username": user.username.lower().strip(),
+            "password": hashed_password,
+            "disabled": False
+        }
     )
-    
-    session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    try:
+        session.add(db_user)
+        session.commit()
+        session.refresh(db_user)
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="The user or email is already registered."
+        )
     background_tasks.add_task(
         EmailType.REGISTRATION.send, 
         to_email=db_user.email, 

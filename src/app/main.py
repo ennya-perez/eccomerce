@@ -6,7 +6,7 @@ from app.routers import auth, orders, product, cart
 from sqlmodel import Session
 
 app = FastAPI(
-    title="🚀 My Ecommerce & Automation API",
+    title="🚀 My Marketplace & Automation API",
     description=API_DESCRIPTION,
     version="1.0.0",
     contact={
@@ -34,6 +34,7 @@ async def custom_swagger_ui_html():
 app.include_router(auth.router)
 app.include_router(product.router)
 app.include_router(cart.router)
+app.include_router(orders.router)
 
 
 if __name__ == "__main__":

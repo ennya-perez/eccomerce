@@ -1,5 +1,4 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional, List
+from sqlmodel import Field
 from app.schemas.product_schema import ProductCreate
 
 

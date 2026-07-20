@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field
-from typing import List
+from typing import List, Optional
 
 class ProductCreate(SQLModel):
     name: str
@@ -8,6 +8,10 @@ class ProductCreate(SQLModel):
     stock: int
     category_id: int
     disabled: bool = Field(default=True)
+    image_url: Optional[str] = Field(
+        default="https://images.unsplash.com/photo-1523275335684-37898b6baf30", 
+        description="URL de la imagen del producto"
+    )
 
 class ProductBase(ProductCreate):
     owner_id: int
@@ -20,6 +24,10 @@ class UpdateProduct(SQLModel):
     stock: int | None = None
     category_id: int | None = None
     disabled: bool | None = Field(default=True)
+    image_url: Optional[str] = Field(
+        default="https://images.unsplash.com/photo-1523275335684-37898b6baf30", 
+        description="URL de la imagen del producto"
+    )
 
 class ProductPaginationResponse(SQLModel):
     total: int

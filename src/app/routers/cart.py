@@ -1,20 +1,16 @@
 from fastapi import APIRouter
 from app.models.product import Product
-from app.schemas.product_schema import ProductCreate, ProductPaginationResponse
 from app.core.db import SessionDep
 from app.core.security import get_current_active_user
-from app.services.email_services import EmailType
 from sqlmodel import select
-from sqlalchemy import func
 from typing import Annotated
-from fastapi import Depends, HTTPException, Query
+from fastapi import Depends, HTTPException
 from app.models.user import AppUser
 from app.models.cart import CartItem
 from app.schemas.cart_schema import CartItemCreate, CartItemUpdate
 from app.core.security import get_current_active_user
-from app.services.email_services import EmailType
 from typing import Annotated
-from fastapi import Depends, HTTPException, Query
+from fastapi import Depends, HTTPException
 
 router = APIRouter(prefix="/cart", tags=["cart"])
 

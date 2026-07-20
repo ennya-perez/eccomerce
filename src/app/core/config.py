@@ -6,9 +6,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    
-    STRIPE_API_KEY: str = os.getenv("STRIPE_API_KEY")
-    STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET")
+    PAYPAL_SECRET_KEY: str = os.getenv("PAYPAL_SECRET_KEY")
+    PAYPAL_CLIENT_ID: str = os.getenv("PATPAL_CLIENT_ID")
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY")
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
