@@ -1,6 +1,7 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from enum import Enum
 from datetime import datetime, timezone
+from typing import Optional, List
 
 class OrderStatus(Enum):
     PENDING = "pending"
@@ -17,6 +18,7 @@ class Order(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     payment_id: str | None = None
+    items: List["OrderItem"] = Relationship(back_populates="order")
 
 class OrderItem(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -24,3 +26,4 @@ class OrderItem(SQLModel, table=True):
     product_id: int = Field(foreign_key="product.product_id")
     quantity: int = Field(gt=0)
     price_at_purchase: int = Field(gt=0)
+    order: Optional[Order] = Relationship(back_populates="items")

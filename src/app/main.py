@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from app.core.db import create_db_and_tables, get_session
 from app.core.security import get_current_user
 from app.core.config import API_DESCRIPTION
-from app.routers import auth, orders, product, cart
+from app.routers import auth, orders, product, cart, webhooks
 from sqlmodel import Session
 
 app = FastAPI(
@@ -35,7 +35,7 @@ app.include_router(auth.router)
 app.include_router(product.router)
 app.include_router(cart.router)
 app.include_router(orders.router)
-
+app.include_router(webhooks.router)
 
 if __name__ == "__main__":
     import uvicorn

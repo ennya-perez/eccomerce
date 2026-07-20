@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
 from app.core.db import get_session
 from app.core.security import get_current_user
 from app.services.payment import get_paypal_access_token, PAYPAL_API_URL
 from app.models.cart import CartItem
-from app.models.order import Order
+from app.models.order import Order, OrderStatus
+from app.services.pdf_generator import generate_order_invoice
+
 
 import httpx
 
@@ -81,3 +84,30 @@ async def get_order_details(
     if order.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return order
+
+@router.get("/{order_id}/invoice")
+async def download_invoice(
+    order_id: int,
+    session: Session = Depends(get_session),
+    current_user = Depends(get_current_user)
+):
+    order = session.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    if order.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You have no permission to see this")
+        
+    if order.status != OrderStatus.PAID:
+        print(order.status)
+        raise HTTPException(status_code=400, detail="Order has not been paid")
+        
+    pdf_buffer = generate_order_invoice(order)
+    
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=factura_orden_{order_id}.pdf"
+        }
+    )

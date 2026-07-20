@@ -5,10 +5,11 @@ from app.models.order import Order
 from app.models.user import AppUser
 from app.services.payment import fulfill_order
 from app.services.email_services import EmailType
+from app.services.pdf_generator import generate_order_invoice
 
-router_webhooks = APIRouter(prefix="/webhooks", tags=["Webhooks"])
+router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 
-@router_webhooks.post("/paypal")
+@router.post("/paypal")
 async def webhook_paypal(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -29,10 +30,8 @@ async def webhook_paypal(
             to_email=user.email,
             name=user.username
         )
-        # 4. Automation in the background (Background Tasks)
-        # background_tasks.add_task(generate_invoice_pdf, local_order_id)
+        background_tasks.add_task(generate_order_invoice, local_order_id)
 
         print(f"Confirmed order payment of ID: {local_order_id}!")
 
-    # PayPal requires you to return a 200 OK to know you received the message
     return {"status": "received"}
