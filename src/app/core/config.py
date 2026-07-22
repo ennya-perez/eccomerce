@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     PAYPAL_SECRET_KEY: str = os.getenv("PAYPAL_SECRET_KEY")
     PAYPAL_CLIENT_ID: str = os.getenv("PATPAL_CLIENT_ID")
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY")
+    GOOGLE_PASSWORD: str = os.getenv("GOOGLE_PASSWORD")
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

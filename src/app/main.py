@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.db import create_db_and_tables, get_session
 from app.core.security import get_current_user
 from app.core.config import API_DESCRIPTION
@@ -13,6 +14,13 @@ app = FastAPI(
         "name": "Us7rname",
         "github": "https://github.com/Us7rname",
     }
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.on_event("startup")

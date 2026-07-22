@@ -1,9 +1,24 @@
 from app.core.config import Settings
 from enum import Enum
 from pydantic import EmailStr
-import resend
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-resend.api_key = Settings().RESEND_API_KEY
+def send_email(to_email: str, subject: str, html_content: str):
+    sender_email = "aprentyaketi@gmail.com"
+    app_password = Settings().GOOGLE_PASSWORD
+
+    msg = MIMEMultipart("alternative")
+    msg["From"] = f"Ycommerce <{sender_email}>"
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(html_content, "html"))
+
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(sender_email, app_password)
+        server.sendmail(sender_email, to_email, msg.as_string())
 
 class EmailType(Enum):
     REGISTRATION = "registration"
@@ -57,12 +72,5 @@ class EmailType(Enum):
             """
         else:
             raise ValueError("Tipo de email no soportado")
-
-        payload = {
-            "from": "Ycommerce <onboarding@resend.dev>",
-            "to": to_email,
-            "subject": subject,
-            "html": html
-        }
         
-        return resend.Emails.send(payload) 
+        return send_email(to_email, subject, html) 
