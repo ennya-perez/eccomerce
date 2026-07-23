@@ -13,7 +13,7 @@ from app.models.product import Product
 from app.schemas.product_schema import ProductCreate, ProductPaginationResponse, UpdateProduct
 from app.core.security import get_current_active_user
 from app.services.email_services import EmailType
-from typing import Annotated
+from typing import Annotated, Optional
 from fastapi import Depends, HTTPException, Query
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -58,13 +58,17 @@ current_user: Annotated[AppUser, Depends(get_current_active_user)]):
 async def get_products(
     session: SessionDep,
     offset: int = Query(default=0, ge=0, description="Records to jump"),
-    limit: int = Query(default=10, ge=1, le=50, description="Records per page")
+    limit: int = Query(default=10, ge=1, le=50, description="Records per page"),
+    category_id: Optional[int] = None
 ):
     """
     ## Obtain product with pagnation metadata
     Returns solicited product portion and total count for frontend's pagination.
     """
-    count_statement = select(func.count()).select_from(Product)
+    query = Product
+    if category_id:
+        query = select(Product).where(Product.category_id == category_id)
+    count_statement = select(func.count()).select_from(query)
     total_products = session.exec(count_statement).one()
     product_statement = select(Product).offset(offset).limit(limit)
     products = session.exec(product_statement).all()

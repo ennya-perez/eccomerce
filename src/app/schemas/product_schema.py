@@ -6,7 +6,7 @@ class ProductCreate(SQLModel):
     description: str = Field(min_length=30)
     price: int
     stock: int
-    category_id: int
+    category_id: int = Field(foreign_key="category.id")
     disabled: bool = Field(default=True)
     image_url: Optional[str] = Field(
         default="https://images.unsplash.com/photo-1523275335684-37898b6baf30", 
@@ -22,7 +22,7 @@ class UpdateProduct(SQLModel):
     description: str | None = Field(default=None, min_length=30)
     price: int | None = None
     stock: int | None = None
-    category_id: int | None = None
+    category_id: int | None = Field(default=None, foreign_key="category.id")
     disabled: bool | None = Field(default=True)
     image_url: Optional[str] = Field(
         default="https://images.unsplash.com/photo-1523275335684-37898b6baf30", 
