@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from app.models.product import Product
 from app.schemas.product_schema import ProductCreate, ProductPaginationResponse
 from app.core.db import SessionDep
@@ -10,11 +10,11 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Query
 from app.models.user import AppUser
 from app.models.product import Product
+from app.models.cart import CartItem
 from app.schemas.product_schema import ProductCreate, ProductPaginationResponse, UpdateProduct
 from app.core.security import get_current_active_user
 from app.services.email_services import EmailType
 from typing import Annotated, Optional
-from fastapi import Depends, HTTPException, Query
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -62,15 +62,15 @@ async def get_products(
     category_id: Optional[int] = None
 ):
     """
-    ## Obtain product with pagnation metadata
+    ## Obtain product with pagination metadata
     Returns solicited product portion and total count for frontend's pagination.
     """
-    query = Product
+    query = select(Product)
     if category_id:
-        query = select(Product).where(Product.category_id == category_id)
-    count_statement = select(func.count()).select_from(query)
+        query = query.where(Product.category_id == category_id)
+    count_statement = select(func.count()).select_from(query.subquery())
     total_products = session.exec(count_statement).one()
-    product_statement = select(Product).offset(offset).limit(limit)
+    product_statement = query.offset(offset).limit(limit)
     products = session.exec(product_statement).all()
     return {
         "total": total_products,
@@ -78,6 +78,29 @@ async def get_products(
         "offset": offset,
         "results": products
     }
+
+@router.get("/my-products")
+def get_my_products(
+    session: SessionDep,
+    current_user: Annotated[AppUser, Depends(get_current_active_user)],
+    skip: int = Query(default=0, ge=0, description="Número de registros a saltar"),
+    limit: int = Query(default=10, ge=1, le=100, description="Número máximo de registros a devolver"),
+):
+    """
+    ## Get products owned by current user
+    - **session:** SessionDep
+    - **current_user:** Annotated[AppUser, Depends(get_current_active_user)]
+    - **skip:** int (Offset)
+    - **limit:** int (Cantidad por página, máximo 100)
+    """
+    query = (
+        select(Product)
+        .where(Product.owner_id == current_user.id)
+        .offset(skip)
+        .limit(limit)
+    )
+    products = session.exec(query).all()
+    return products
 
 @router.get("/{id_product}")
 def get_product(id_product: int, session: SessionDep):
@@ -135,6 +158,9 @@ def delete_product(id_product: int, CurrentUserDep:
     if not product:
         raise HTTPException(status_code=404, detail="Product not found. This product is not in the database")
     if product.owner_id == CurrentUserDep.id:
+        cart_items = session.exec(select(CartItem).where(CartItem.product_id == id_product)).all()
+        for item in cart_items:
+            session.delete(item)
         session.delete(product)
         session.commit()
         background_tasks.add_task(
