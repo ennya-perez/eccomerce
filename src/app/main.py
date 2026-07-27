@@ -5,6 +5,7 @@ from app.core.security import get_current_user
 from app.core.config import API_DESCRIPTION
 from app.routers import auth, orders, product, cart, webhooks
 from sqlmodel import Session
+import os
 
 app = FastAPI(
     title="🚀 My Marketplace & Automation API",
@@ -15,12 +16,15 @@ app = FastAPI(
         "github": "https://github.com/Us7rname",
     }
 )
+
+origins = [
+    "http://localhost:5173",
+    "https://yccomerce-marketplace-ggvozrki2-aprentyaketi-2808s-projects.vercel.app/"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://yccomerce-marketplace-ggvozrki2-aprentyaketi-2808s-projects.vercel.app/"
-        ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
