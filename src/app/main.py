@@ -26,6 +26,7 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+    seed_categories()
 
 @app.get("/")
 def read_root(session: Session = Depends(get_session)):
