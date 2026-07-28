@@ -19,8 +19,10 @@ async def checkout_con_paypal(
     current_user = Depends(get_current_user)
 ):
     items = session.exec(select(CartItem).where(CartItem.user_id == current_user.id)).all()
-    if not isinstance(items[0], CartItem):
-        raise HTTPException(status_code=400, detail="No items in cart")
+    if not items:
+        return {"message": "The cart is empty", "items": []}
+    if not all(isinstance(item, CartItem) for item in items):
+        raise ValueError("The elements retrieved are not of type CartItem")
     total_pay = sum(item.total_price for item in items)
     new_order = Order(
         user_id=current_user.id,

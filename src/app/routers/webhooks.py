@@ -23,7 +23,7 @@ async def webhook_paypal(
         order.status = "PAID"
         session.add(order)
         fulfill_order(order_id=local_order_id, session=session)
-        session.commit()
+        session.commit()        
         user = session.get(AppUser, order.user_id)
         background_tasks.add_task(
             EmailType.PAYMENT_SUCCESFUL.send,
