@@ -19,7 +19,7 @@ app = FastAPI(
 
 origins = [
     "http://localhost:5173",
-    "https://yccomerce-marketplace-ggvozrki2-aprentyaketi-2808s-projects.vercel.app/"
+    "https://yccomerce-marketplace-two.vercel.app"
 ]
 
 app.add_middleware(
