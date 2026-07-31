@@ -15,16 +15,17 @@ async def webhook_paypal(
     background_tasks: BackgroundTasks,
     session: Session = Depends(get_session)
 ):
+    """
+    Handles the after payment confirmation from PayPal
+    """
     try:
         event = await request.json()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
-    # Procesar solo si es captura completada
     if event.get("event_type") == "PAYMENT.CAPTURE.COMPLETED":
         resource = event.get("resource", {})
 
-        # Extracción segura de IDs sin riesgo de KeyError
         local_order_id = resource.get("custom_id")
         
         if not local_order_id:
@@ -36,14 +37,11 @@ async def webhook_paypal(
             print("Webhook recibido sin ID de orden válida.")
             return {"status": "ignored", "reason": "Missing order ID"}
 
-        # Asegurar tipo de dato si tu ID en BD es entero (ej: int(local_order_id))
         order = session.get(Order, local_order_id)
         
         if not order:
             print(f"Orden ID {local_order_id} no encontrada en la BD.")
             return {"status": "error", "message": "Order not found"}
-
-        # Idempotencia: Procesar solo si aún no está pagada
         if order.status != "PAID":
             order.status = "PAID"
             session.add(order)

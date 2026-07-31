@@ -7,9 +7,9 @@ from app.services.payment import get_paypal_access_token, PAYPAL_API_URL
 from app.models.cart import CartItem
 from app.models.order import Order, OrderStatus
 from app.services.pdf_generator import generate_order_invoice
-
-
 import httpx
+import os
+import requests
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -18,6 +18,12 @@ async def checkout_con_paypal(
     session: Session = Depends(get_session),
     current_user = Depends(get_current_user)
 ):
+    """
+    ## Checkout with PayPal
+        - Creates an order in the database
+        - Creates a payment in PayPal
+        - Returns the PayPal approval URL
+    """
     items = session.exec(select(CartItem).where(CartItem.user_id == current_user.id)).all()
     if not items:
         return {"message": "The cart is empty", "items": []}
@@ -68,11 +74,40 @@ async def checkout_con_paypal(
         "paypal_url": approve_url
     }
 
+@router.post("/{order_id}/capture")
+def capture_order(order_id: str):
+    """
+    ## Capture order
+    - Captures the order in PayPal
+    - Updates the order status
+    """
+    client_id = os.getenv("PAYPAL_CLIENT_ID")
+    secret = os.getenv("PAYPAL_CLIENT_SECRET")
+    auth_resp = requests.post(
+        "https://api-m.sandbox.paypal.com/v1/oauth2/token",
+        auth=(client_id, secret),
+        data={"grant_type": "client_credentials"}
+    ).json()
+    access_token = auth_resp.get("access_token")
+    capture_resp = requests.post(
+        f"https://api-m.sandbox.paypal.com/v2/checkout/orders/{order_id}/capture",
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+    ).json()
+    
+    return capture_resp
+
 @router.get("/history")
 async def get_order_history(
     session: Session = Depends(get_session),
     current_user = Depends(get_current_user)
 ):
+    """
+    ## Get order history
+    Returns user's order history
+    """
     orders = session.exec(select(Order).where(Order.user_id == current_user.id)).all()
     return orders
 
@@ -82,6 +117,10 @@ async def get_order_details(
     session: Session = Depends(get_session),
     current_user = Depends(get_current_user)
 ):
+    """"
+    ## Get order details
+    Returns order details
+    """
     order = session.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -95,6 +134,10 @@ async def download_invoice(
     session: Session = Depends(get_session),
     current_user = Depends(get_current_user)
 ):
+    """"
+    ## Get order invoice
+    Returns order invoice pdf
+    """
     order = session.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
