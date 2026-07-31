@@ -69,7 +69,8 @@ async def checkout_con_paypal(
     approve_url = next(link["href"] for link in paypal_order["links"] if link["rel"] == "approve")
     
     return {
-        "id": paypal_order["id"],
+        "order_id": new_order.id,
+        "paypal_order_id": paypal_order["id"],
         "message": f"Order made successfully with ID: {new_order.id}",
         "paypal_url": approve_url
     }
