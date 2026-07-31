@@ -82,7 +82,7 @@ def capture_order(order_id: str):
     - Updates the order status
     """
     client_id = os.getenv("PAYPAL_CLIENT_ID")
-    secret = os.getenv("PAYPAL_CLIENT_SECRET")
+    secret = os.getenv("PAYPAL_SECRET_KEY")
     auth_resp = requests.post(
         "https://api-m.sandbox.paypal.com/v1/oauth2/token",
         auth=(client_id, secret),
