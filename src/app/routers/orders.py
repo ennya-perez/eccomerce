@@ -74,30 +74,50 @@ async def checkout_con_paypal(
         "paypal_url": approve_url
     }
 
-@router.post("/{order_id}/capture")
-def capture_order(order_id: str):
+@router.post("/capture-paypal")
+def capture_paypal_payment(
+    payload: dict,
+    session: Session = Depends(get_session)
+):
     """
-    ## Capture order
-    - Captures the order in PayPal
-    - Updates the order status
+    ## Capture paypal payment
+    Captures the payment from PayPal and updates the order status
     """
+    paypal_order_id = payload.get("paypal_order_id")
+    local_order_id = payload.get("local_order_id")
+
+    if not paypal_order_id or not local_order_id:
+        raise HTTPException(status_code=400, detail="Order IDs are missing")
+
     client_id = os.getenv("PAYPAL_CLIENT_ID")
     secret = os.getenv("PAYPAL_SECRET_KEY")
-    auth_resp = requests.post(
+    auth_response = requests.post(
         "https://api-m.sandbox.paypal.com/v1/oauth2/token",
         auth=(client_id, secret),
         data={"grant_type": "client_credentials"}
-    ).json()
-    access_token = auth_resp.get("access_token")
-    capture_resp = requests.post(
-        f"https://api-m.sandbox.paypal.com/v2/checkout/orders/{order_id}/capture",
+    )
+    if auth_response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Authentication error with PayPal")
+    access_token = auth_response.json().get("access_token")
+    capture_response = requests.post(
+        f"https://api-m.sandbox.paypal.com/v2/checkout/orders/{paypal_order_id}/capture",
         headers={
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json"
         }
-    ).json()
+    )
+
+    capture_data = capture_response.json()
+    if capture_response.status_code in [200, 201] and capture_data.get("status") == "COMPLETED":
+        order = session.get(Order, local_order_id)
+        if order:
+            order.status = "PAID"
+            session.add(order)
+            session.commit()
+            return {"status": "success", "message": "Paid and updated order"}
     
-    return capture_resp
+    raise HTTPException(status_code=400, detail="PayPal couldn't complete the capture")
+
 
 @router.get("/history")
 async def get_order_history(
