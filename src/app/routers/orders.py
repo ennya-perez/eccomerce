@@ -55,10 +55,11 @@ async def checkout_con_paypal(
         response = await client.post(f"{PAYPAL_API_URL}/v2/checkout/orders", headers=headers, json=payload)
     
     if response.status_code != 201:
-        print("❌ ERROR DETALLADO DE PAYPAL:", response.status_code, response.json())
+        print(" DETAILED ERROR FROM PAYPAL:", response.status_code, response.json())
         raise HTTPException(status_code=400, detail="Could not create payment in PayPal")
         
     paypal_order = response.json()
+    print(paypal_order)
     approve_url = next(link["href"] for link in paypal_order["links"] if link["rel"] == "approve")
     
     return {
