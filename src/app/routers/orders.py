@@ -85,7 +85,7 @@ def capture_paypal_payment(
     Captures the payment from PayPal and updates the order status
     """
     paypal_order_id = payload.get("paypal_order_id")
-    local_order_id = payload.get("local_order_id")
+    local_order_id = payload.get("order_id")
 
     if not paypal_order_id or not local_order_id:
         raise HTTPException(status_code=400, detail="Order IDs are missing")
