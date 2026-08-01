@@ -115,7 +115,7 @@ def capture_paypal_payment(
             order.status = "PAID"
             session.add(order)
             session.commit()
-            return {"status": "success", "message": "Paid and updated order"}
+            return {"status": "success", "message": "Paid and updated order", "paypal_order_id": paypal_order_id}
     
     raise HTTPException(status_code=400, detail="PayPal couldn't complete the capture")
 
