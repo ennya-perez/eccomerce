@@ -37,6 +37,16 @@ current_user: Annotated[AppUser, Depends(get_current_active_user)]):
     product = session.get(Product, cart_item_create.product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    existing_item = session.exec(
+        select(CartItem).where(
+            CartItem.user_id == current_user.id,
+            CartItem.product_id == cart_item_create.product_id
+        )
+    ).first()
+    if existing_item:
+        existing_item.quantity += cart_item_create.quantity
+        session.add(existing_item)
+        return existing_item
     db_cart_item = CartItem(
         product_id=cart_item_create.product_id,
         user_id=current_user.id,

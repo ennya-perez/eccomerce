@@ -61,7 +61,7 @@ async def checkout_con_paypal(
     return {
         "order_id": new_order.id,
         "paypal_order_id": paypal_order["id"],
-        "message": "Orden made correctly"
+        "message": "Order made correctly"
     }
 
 
