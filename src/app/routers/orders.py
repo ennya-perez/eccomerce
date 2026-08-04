@@ -151,7 +151,14 @@ async def download_invoice(
     ## Get order invoice
     Returns order pdf invoice
     """
-    order = session.get(Order, order_id)
+    statement = (
+        select(Order)
+        .where(Order.id == order_id)
+        .options(
+            selectinload(Order.items).selectinload(OrderItem.product)
+        )
+    )
+    order = session.exec(statement).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     if order.user_id != current_user.id:

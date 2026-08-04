@@ -5,7 +5,7 @@ from app.models.order import Order
 class InvoicePDF(FPDF):
     def header(self):
         self.set_font("Helvetica", "B", 16)
-        self.cell(0, 10, "YCOMMERCE - PURCHASE RECEIPT", ln=True, align="C")
+        self.cell(0, 10, "YCOMMERCE - PURCHASE RECEIPT", new_x="LMARGIN", new_y="NEXT", align="C")
         self.ln(5)
         self.line(10, self.get_y(), 200, self.get_y())
         self.ln(10)
@@ -16,47 +16,49 @@ class InvoicePDF(FPDF):
         self.cell(0, 10, f"Page {self.page_no()}/{{nb}}", align="C")
 
 def generate_order_invoice(order: Order) -> io.BytesIO:
+    """
+    Generate order invoice: generates pdf invoice of users order
+    """
     pdf = InvoicePDF()
     pdf.alias_nb_pages()
     pdf.add_page()
     
-
     pdf.set_font("Helvetica", "B", 12)
-    pdf.cell(0, 8, f"Receipt N°: #0000{order.id}", ln=True)
+    pdf.cell(0, 8, f"Receipt N°: #{order.id:06d}", new_x="LMARGIN", new_y="NEXT")
     
     pdf.set_font("Helvetica", "", 10)
-    fecha_str = order.created_at.strftime("%Y-%m-%d %H:%M")
-    pdf.cell(0, 6, f"Emission Date: {fecha_str}", ln=True)
-    pdf.cell(0, 6, f"Payment status: {order.status} (By PayPal)", ln=True)
+    fecha_str = order.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(order, "created_at") and order.created_at else "N/A"
+    pdf.cell(0, 6, f"Emission Date: {fecha_str}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Payment status: {order.status} (By PayPal)", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(10)
     
-
     pdf.set_font("Helvetica", "B", 10)
-
-    pdf.cell(100, 8, "Producto", border=1)
-    pdf.cell(30, 8, "Cantidad", border=1, align="C")
-    pdf.cell(60, 8, "Total", border=1, align="R")
-    pdf.ln()
+    pdf.cell(100, 8, "Product", border=1)
+    pdf.cell(30, 8, "Quantity", border=1, align="C")
+    pdf.cell(60, 8, "Total", border=1, align="R", new_x="LMARGIN", new_y="NEXT")
     
-
     pdf.set_font("Helvetica", "", 10)
     calc_total = 0.0
     
     for item in order.items:
-        product_name = item.product.name if hasattr(item, 'product') else f"Producto ID {item.product_id}"
-        subtotal_item = item.quantity * item.price
-        calc_total += float(subtotal_item)
-        
-        pdf.cell(100, 8, product_name, border=1)
+        if hasattr(item, "product") and item.product and hasattr(item.product, "name"):
+            product_name = item.product.name
+        else:
+            product_name = f"Producto ID {item.product_id}"
+        unit_price = getattr(item, "price", None)
+        if unit_price is None and hasattr(item, "product") and item.product:
+            unit_price = getattr(item.product, "price", 0.0)
+        elif unit_price is None:
+            unit_price = 0.0
+        subtotal_item = item.quantity * float(unit_price)
+        calc_total += subtotal_item
+        pdf.cell(100, 8, str(product_name)[:45], border=1)
         pdf.cell(30, 8, str(item.quantity), border=1, align="C")
-        pdf.cell(60, 8, f"${subtotal_item:.2f}", border=1, align="R")
-        pdf.ln()
-        
+        pdf.cell(60, 8, f"${subtotal_item:.2f}", border=1, align="R", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(130, 8, "TOTAL PAID", border=1, align="R")
-    pdf.cell(60, 8, f"${calc_total:.2f}", border=1, align="R")
-    
-    pdf_bytes = pdf.output()
+    pdf.cell(60, 8, f"${calc_total:.2f}", border=1, align="R", new_x="LMARGIN", new_y="NEXT")
+    pdf_bytes = bytes(pdf.output())
     
     buffer = io.BytesIO(pdf_bytes)
     buffer.seek(0)
