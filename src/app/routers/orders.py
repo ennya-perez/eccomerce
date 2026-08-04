@@ -6,7 +6,7 @@ from app.core.db import get_session
 from app.core.security import get_current_user
 from app.services.payment import get_paypal_access_token, PAYPAL_API_URL
 from app.models.cart import CartItem
-from app.models.order import Order, OrderStatus
+from app.models.order import Order, OrderStatus, OrderItem
 from app.services.pdf_generator import generate_order_invoice
 import httpx
 import os
@@ -25,7 +25,7 @@ async def checkout_con_paypal(
     - Makes PayPal payment order
     - Returns the PayPal order ID and local DB ID
     """
-    items = session.exec(select(CartItem).where(CartItem.user_id == current_user.id)).all()
+    items = session.exec(select(CartItem).where(CartItem.user_id == current_user.id).options(selectinload(CartItem.product))).all()
     if not items:
         raise HTTPException(status_code=400, detail="The cart is void")
     total_pay = sum(item.total_price for item in items)
