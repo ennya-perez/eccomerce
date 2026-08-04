@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
+from sqlmodel.orm import selectinload
 from app.core.db import get_session
 from app.core.security import get_current_user
 from app.services.payment import get_paypal_access_token, PAYPAL_API_URL
