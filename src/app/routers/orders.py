@@ -156,7 +156,7 @@ async def download_invoice(
         raise HTTPException(status_code=404, detail="Order not found")
     if order.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="You have no permission to see this")
-    if str(order.status).upper() != "PAID":
+    if order.status != OrderStatus.PAID:
         raise HTTPException(status_code=400, detail="Order has not been paid")
     pdf_buffer = generate_order_invoice(order)
     return StreamingResponse(
