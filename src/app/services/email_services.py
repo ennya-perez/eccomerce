@@ -4,21 +4,25 @@ from pydantic import EmailStr
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import logging
 
 def send_email(to_email: str, subject: str, html_content: str):
-    sender_email = "aprentyaketi@gmail.com"
-    app_password = Settings().GOOGLE_PASSWORD
+    try:
+        sender_email = "aprentyaketi@gmail.com"
+        app_password = Settings().GOOGLE_PASSWORD
 
-    msg = MIMEMultipart("alternative")
-    msg["From"] = f"Ycommerce <{sender_email}>"
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(html_content, "html"))
-
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(sender_email, app_password)
-        server.sendmail(sender_email, to_email, msg.as_string())
+        msg = MIMEMultipart("alternative")
+        msg["From"] = f"Ycommerce <{sender_email}>"
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(html_content, "html"))
+        with smtplib.SMTP("smtp.gmail.com", 465, timeout=10) as server:
+            server.starttls()
+            server.login(sender_email, app_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
+    except Exception as e:
+        logging.error(f"[Email Error] Could not send email to {to_email}: {e}")
+        return False
 
 class EmailType(Enum):
     REGISTRATION = "registration"
