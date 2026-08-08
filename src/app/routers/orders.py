@@ -144,30 +144,18 @@ async def get_order_details(
 
 
 @router.get("/{order_id}/invoice")
-async def download_invoice(
-    order_id: int,
-    session: Session = Depends(get_session),
-    current_user = Depends(get_current_user)
-):
-    """
-    ## Get order invoice
-    Returns order pdf invoice
-    """
-    statement = select(Order).where(Order.id == order_id).options(selectinload(Order.items))
-    order = session.exec(statement).first()
+def get_order_invoice(order_id: int, session: Session = Depends(get_session)):
+    order = session.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Orden no encontrada")
-    product_ids = [item.product_id for item in order.items if hasattr(item, "product_id")]
-    if product_ids:
-        products = session.exec(select(Product).where(Product.product_id.in_(product_ids))).all()
-        products_map = {p.product_id: p for p in products}
-        for item in order.items:
-            item.product = products_map.get(item.product_id)
+    items = session.exec(select(OrderItem).where(OrderItem.order_id == order_id)).all()
+    for item in items:
+        if not hasattr(item, "product") or not item.product:
+            item.product = session.get(Product, item.product_id)
+    order.items = items
     pdf_buffer = generate_order_invoice(order)
     return StreamingResponse(
         pdf_buffer,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename=factura_orden_{order_id}.pdf"
-        }
+        headers={"Content-Disposition": f"attachment; filename=factura-{order_id}.pdf"},
     )

@@ -31,35 +31,39 @@ def generate_order_invoice(order: Order) -> io.BytesIO:
     pdf.cell(0, 6, f"Emission Date: {fecha_str}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Payment status: {order.status} (By PayPal)", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(10)
-    
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(100, 8, "Product", border=1)
     pdf.cell(30, 8, "Quantity", border=1, align="C")
     pdf.cell(60, 8, "Total", border=1, align="R", new_x="LMARGIN", new_y="NEXT")
-    
     pdf.set_font("Helvetica", "", 10)
     calc_total = 0.0
-    
-    for item in order.items:
+    items_list = getattr(order, "items", []) or []
+    for item in items_list:
         if hasattr(item, "product") and item.product and hasattr(item.product, "name"):
             product_name = item.product.name
         else:
-            product_name = f"Producto ID {item.product_id}"
+            product_name = f"Producto ID {getattr(item, 'product_id', 'N/A')}"
         unit_price = getattr(item, "price", None)
         if unit_price is None and hasattr(item, "product") and item.product:
             unit_price = getattr(item.product, "price", 0.0)
         elif unit_price is None:
             unit_price = 0.0
-        subtotal_item = item.quantity * float(unit_price)
+
+        quantity = getattr(item, "quantity", 1)
+        subtotal_item = quantity * float(unit_price)
         calc_total += subtotal_item
+
         pdf.cell(100, 8, str(product_name)[:45], border=1)
-        pdf.cell(30, 8, str(item.quantity), border=1, align="C")
+        pdf.cell(30, 8, str(quantity), border=1, align="C")
         pdf.cell(60, 8, f"${subtotal_item:.2f}", border=1, align="R", new_x="LMARGIN", new_y="NEXT")
+    final_total = calc_total
+    if final_total == 0.0:
+        final_total = float(getattr(order, "total_amount", getattr(order, "total", getattr(order, "amount", 0.0))))
+
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(130, 8, "TOTAL PAID", border=1, align="R")
-    pdf.cell(60, 8, f"${calc_total:.2f}", border=1, align="R", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(60, 8, f"${final_total:.2f}", border=1, align="R", new_x="LMARGIN", new_y="NEXT")    
     pdf_bytes = bytes(pdf.output())
-    
     buffer = io.BytesIO(pdf_bytes)
     buffer.seek(0)
     
