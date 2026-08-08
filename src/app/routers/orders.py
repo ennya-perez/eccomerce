@@ -153,22 +153,16 @@ async def download_invoice(
     ## Get order invoice
     Returns order pdf invoice
     """
-    statement = (
-        select(Order)
-        .where(Order.id == order_id)
-        .options(
-            selectinload(Order.items).selectinload(
-                session.get(Product, OrderItem.product_id)
-            )
-        )
-    )
+    statement = select(Order).where(Order.id == order_id).options(selectinload(Order.items))
     order = session.exec(statement).first()
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    if order.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="You have no permission to see this")
-    if order.status != OrderStatus.PAID:
-        raise HTTPException(status_code=400, detail="Order has not been paid")
+        raise HTTPException(status_code=404, detail="Orden no encontrada")
+    product_ids = [item.product_id for item in order.items if hasattr(item, "product_id")]
+    if product_ids:
+        products = session.exec(select(Product).where(Product.product_id.in_(product_ids))).all()
+        products_map = {p.product_id: p for p in products}
+        for item in order.items:
+            item.product = products_map.get(item.product_id)
     pdf_buffer = generate_order_invoice(order)
     return StreamingResponse(
         pdf_buffer,
