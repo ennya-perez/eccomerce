@@ -159,18 +159,21 @@ async def get_order_details(
     return order
 
 
-@router.get("/{order_id}/invoice")
+@router.get("/orders/{order_id}/invoice")
 def get_order_invoice(order_id: int, session: Session = Depends(get_session)):
-    order = session.get(Order, order_id)
+    statement = (
+        select(Order)
+        .where(Order.id == order_id)
+        .options(
+            selectinload(Order.items).selectinload(OrderItem.product)
+        )
+    )
+    order = session.exec(statement).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    items = session.exec(select(OrderItem).where(OrderItem.order_id == order_id)).all()
-    for item in items:
-        item.product = session.get(Product, item.product_id)
-    order.items = items
     pdf_buffer = generate_order_invoice(order)
     return StreamingResponse(
         pdf_buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=factura-{order_id}.pdf"},
+        headers={"Content-Disposition": f"attachment; filename=invoice-{order_id}.pdf"},
     )

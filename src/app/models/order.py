@@ -27,3 +27,4 @@ class OrderItem(SQLModel, table=True):
     quantity: int = Field(gt=0)
     price_at_purchase: int = Field(gt=0)
     order: Optional[Order] = Relationship(back_populates="items")
+    product: Optional[Product] = Relationship()
