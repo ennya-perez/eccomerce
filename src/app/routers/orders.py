@@ -39,11 +39,12 @@ async def checkout_con_paypal(
     session.commit()
     session.refresh(new_order)
     for cart_item in items:
+        product = session.get(Product, cart_item.product_id)
         order_item = OrderItem(
         order_id=new_order.id,
         product_id=cart_item.product_id,
         quantity=cart_item.quantity,
-        price_at_purchase=cart_item.product.price
+        price_at_purchase=product.price
     )
     session.add(order_item)
     session.commit()
