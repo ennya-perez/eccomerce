@@ -38,6 +38,15 @@ async def checkout_con_paypal(
     session.add(new_order)
     session.commit()
     session.refresh(new_order)
+    for cart_item in items:
+        order_item = OrderItem(
+        order_id=new_order.id,
+        product_id=cart_item.product_id,
+        quantity=cart_item.quantity,
+        price_at_purchase=cart_item.product.price
+    )
+    session.add(order_item)
+    session.commit()
     access_token = await get_paypal_access_token()
     headers = {
         "Authorization": f"Bearer {access_token}",
