@@ -119,9 +119,7 @@ def capture_paypal_payment(
             session.commit()
             for item in order.items:
                 product = session.get(Product, item.product_id)
-                print("Item:", item)
                 if product:
-                    print("Product:", product)
                     product.stock = max(0, product.stock - item.quantity)
                     session.add(product)
             session.commit()
