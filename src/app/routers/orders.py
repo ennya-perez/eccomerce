@@ -44,7 +44,8 @@ async def checkout_con_paypal(
         order_id=new_order.id,
         product_id=cart_item.product_id,
         quantity=cart_item.quantity,
-        price_at_purchase=product.price
+        price_at_purchase=product.price,
+        product=product
     )
     session.add(order_item)
     session.commit()

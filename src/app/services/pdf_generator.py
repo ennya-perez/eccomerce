@@ -42,7 +42,7 @@ def generate_order_invoice(order: Order) -> io.BytesIO:
         if hasattr(item, "product") and item.product and hasattr(item.product, "name"):
             product_name = item.product.name
         else:
-            product_name = f"Producto ID {getattr(item, 'product_id', 'N/A')}"
+            product_name = f"Product ID {getattr(item, 'product_id', 'N/A')}"
         unit_price = getattr(item, "price", None)
         if unit_price is None and hasattr(item, "product") and item.product:
             unit_price = getattr(item.product, "price", 0.0)
