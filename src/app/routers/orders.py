@@ -7,6 +7,7 @@ from app.core.security import get_current_user
 from app.services.payment import get_paypal_access_token, PAYPAL_API_URL
 from app.models.cart import CartItem
 from app.models.order import Order, OrderStatus, Order, OrderItem
+from app.models.product import Product
 from app.services.pdf_generator import generate_order_invoice
 import httpx
 import os
@@ -156,7 +157,9 @@ async def download_invoice(
         select(Order)
         .where(Order.id == order_id)
         .options(
-            selectinload(Order.items).selectinload(OrderItem.product)
+            selectinload(Order.items).selectinload(
+                session.get(Product, OrderItem.product_id)
+            )
         )
     )
     order = session.exec(statement).first()
