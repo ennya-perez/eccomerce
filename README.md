@@ -1,6 +1,7 @@
 # 🚀 My Marketplace & Automation API
 
-Welcome to the backend API powering the marketplace platform. This service handles product management with pagination, seller inventory control, user authentication, shopping cart operations, PayPal checkout processing, and PDF invoice generation. You can see the working project in this link: https://yccomerce-marketplace-two.vercel.app/products
+Welcome to the backend API powering the marketplace platform. This service handles product management with pagination, seller inventory control, user authentication, shopping cart operations, PayPal checkout processing, and PDF invoice generation. You can see the working project with frontend in this link: https://yccomerce-marketplace-two.vercel.app/products, as you can also access to the API here: https://yccomerce-backend.onrender.com/ with docs at 
+https://yccomerce-backend.onrender.com/docs
 
 ---
 
