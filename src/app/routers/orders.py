@@ -109,9 +109,10 @@ def capture_paypal_payment(
             session.commit()
             for item in order.items:
                 product = session.get(Product, item.product_id)
-                product.stock -= item.quantity
-                session.add(product)
-                session.commit()
+                if product:
+                    product.stock = max(0, product.stock - item.quantity)
+                    session.add(product)
+            session.commit()
             return {"status": "success", "message": "Payment completed and order updated"}
     print("ERROR PAYPAL CAPTURE:", capture_data)
     raise HTTPException(status_code=400, detail="PayPal could not complete the capture")
@@ -152,7 +153,7 @@ async def get_order_details(
 def get_order_invoice(order_id: int, session: Session = Depends(get_session)):
     order = session.get(Order, order_id)
     if not order:
-        raise HTTPException(status_code=404, detail="Orden no encontrada")
+        raise HTTPException(status_code=404, detail="Order not found")
     items = session.exec(select(OrderItem).where(OrderItem.order_id == order_id)).all()
     for item in items:
         item.product = session.get(Product, item.product_id)
