@@ -108,9 +108,10 @@ def capture_paypal_payment(
                 session.delete(item)
             session.commit()
             for item in order.items:
-                item.product.stock -= item.quantity
-                session.add(item.product)
-            session.commit()
+                product = session.get(Product, item.product_id)
+                product.stock -= item.quantity
+                session.add(product)
+                session.commit()
             return {"status": "success", "message": "Payment completed and order updated"}
     print("ERROR PAYPAL CAPTURE:", capture_data)
     raise HTTPException(status_code=400, detail="PayPal could not complete the capture")
