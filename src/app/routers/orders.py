@@ -160,7 +160,7 @@ async def get_order_details(
     return order
 
 
-@router.get("/orders/{order_id}/invoice")
+@router.get("/{order_id}/invoice")
 def get_order_invoice(order_id: int, session: Session = Depends(get_session)):
     statement = (
         select(Order)
