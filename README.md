@@ -135,7 +135,7 @@ https://yccomerce-backend.onrender.com/docs
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Us7rname/your-repo-name.git
+git clone https://github.com/codecraft-prog/your-repo-name.git
 cd your-repo-name
 
 ```
@@ -188,7 +188,7 @@ Once the server is running, explore and test endpoints interactively via:
 
 ## 👤 Author
 
-* **Developer:** Us7rname (Code Craft)
+* **Developer:** Ennya Perez (Code Craft Studio)
 
 
-* **GitHub:** [@Us7rname](https://www.google.com/search?q=https://github.com/Us7rname)
+* **GitHub:** [@codecraft-prog](https://www.google.com/search?q=https://github.com/codecraft-prog)
