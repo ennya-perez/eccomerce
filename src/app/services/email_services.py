@@ -20,6 +20,8 @@ def send_email(to_email: str, subject: str, html_content: str):
             server.starttls()
             server.login(sender_email, app_password)
             server.sendmail(sender_email, to_email, msg.as_string())
+            response = server.sendmail(sender_email, to_email, msg.as_string())
+            print("DEBUG: {response}")
     except Exception as e:
         logging.error(f"[Email Error] Could not send email to {to_email}: {e}")
         return False
