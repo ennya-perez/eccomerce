@@ -1,27 +1,39 @@
 from app.core.config import Settings
 from enum import Enum
 from pydantic import EmailStr
-import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
+import requests
+
+BREVO_API_KEY = Settings().BREVO_API_KEY
 
 def send_email(to_email: str, subject: str, html_content: str):
     try:
-        sender_email = "aprentyaketi@gmail.com"
-        app_password = Settings().GOOGLE_PASSWORD
+        url = "https://api.brevo.com/v3/smtp/email"
 
-        msg = MIMEMultipart("alternative")
-        msg["From"] = f"Ycommerce <{sender_email}>"
-        msg["To"] = to_email
-        msg["Subject"] = subject
-        msg.attach(MIMEText(html_content, "html"))
-        with smtplib.SMTP("smtp.gmail.com", 465, timeout=10) as server:
-            server.starttls()
-            server.login(sender_email, app_password)
-            server.sendmail(sender_email, to_email, msg.as_string())
-            response = server.sendmail(sender_email, to_email, msg.as_string())
-            print("DEBUG: {response}")
+        headers = {
+            "accept": "application/json",
+            "api-key": BREVO_API_KEY,
+            "content-type": "application/json",
+        }
+
+        payload = {
+            "sender": {
+                "name": "Yccomerce",
+                "email": "aprentyaketi@gmail.com",
+            },
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_content,
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        if response.status_code in [200, 201]:
+            print("Correo enviado con éxito por Brevo")
+        else:
+            print(f"Error enviando correo: {response.text}")
     except Exception as e:
         logging.error(f"[Email Error] Could not send email to {to_email}: {e}")
         return False
