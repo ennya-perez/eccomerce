@@ -1,4 +1,4 @@
-from app.core.config import Settings
+from app.core.config import settings
 from enum import Enum
 from pydantic import EmailStr
 from email.mime.text import MIMEText
@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 import logging
 import requests
 
-BREVO_API_KEY = Settings().BREVO_API_KEY
+BREVO_API_KEY = settings.BREVO_API_KEY
 
 def send_email(to_email: str, subject: str, html_content: str):
     try:
